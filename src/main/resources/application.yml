@@ -1,0 +1,23 @@
+spring:
+#  main:
+#    allow-bean-definition-overriding: true
+  application:
+    name: ailoganalyzer
+  ai:
+    vectorstore:
+      chroma:
+        base-url: http://localhost:8000
+        collection-name: logs
+        tenant-id: default
+        database: default
+        initialize-schema: true
+
+
+logging:
+  level:
+    org:
+      springframework:
+        ai: DEBUG
+
+server:
+  port: 8081
