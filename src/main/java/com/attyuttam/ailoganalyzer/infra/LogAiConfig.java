@@ -37,7 +37,7 @@ public class LogAiConfig {
     public EmbeddingModel embeddingModel(OllamaApi ollamaApi,ObservationRegistry observationRegistry, ModelManagementOptions modelManagementOptions) {
         OllamaOptions ollamaOptions = OllamaOptions.builder()
                 .model("nomic-embed-text")
-                .temperature(0.4)
+                .temperature(0.2)
                 .build();
         return new OllamaEmbeddingModel(ollamaApi,ollamaOptions,observationRegistry,modelManagementOptions);
     }
@@ -50,7 +50,7 @@ public class LogAiConfig {
     public OllamaChatModel ollamaChatModel(OllamaApi ollamaApi,ToolCallingManager toolCallingManager, ObservationRegistry observationRegistry, ModelManagementOptions modelManagementOptions){
         OllamaOptions ollamaOptions = OllamaOptions.builder()
                 .model("llama3.2")
-                .temperature(0.7)
+                .temperature(0.2)
                 .build();
         return new OllamaChatModel(ollamaApi,ollamaOptions,toolCallingManager,observationRegistry,modelManagementOptions);
     }

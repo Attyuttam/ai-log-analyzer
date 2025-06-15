@@ -13,10 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +20,6 @@ import java.util.concurrent.Future;
 public class ChromaVectorStoreService implements LogVectorStoreService {
 
     private final ChromaVectorStore vectorStore;
-    private final EmbeddingModel embeddingModel;
 
 
     public List<String> searchSimilarLogs(String query) {
@@ -32,41 +27,27 @@ public class ChromaVectorStoreService implements LogVectorStoreService {
     }
 
     @Override
-
     public void ingestLogs(List<String> logLines) {
         int batchSize = 100;
-        int numThreads = Runtime.getRuntime().availableProcessors(); // Or adjust manually
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-
-        List<Future<?>> futures = new ArrayList<>();
 
         for (int i = 0; i < logLines.size(); i += batchSize) {
-            final int batchIndex = i;
-            List<String> batchLines = logLines.subList(batchIndex, Math.min(batchIndex + batchSize, logLines.size()));
+            if(i%100 == 0){
+                log.info("processing batch from i={} to i={}",i,Math.min(i+batchSize,logLines.size()));
+            }
+            List<String> batchLines = logLines.subList(i, Math.min(i + batchSize, logLines.size()));
 
-            futures.add(executor.submit(() -> {
-                List<Document> documents = new ArrayList<>(batchLines.size());
-                for (String line : batchLines) {
-                    documents.add(new Document(line));
-                }
+            // Use ArrayList to avoid Collectors overhead
+            List<Document> documents = new ArrayList<>(batchLines.size());
+            for (String line : batchLines) {
+                documents.add(new Document(line));
+            }
 
-                try {
-                    vectorStore.add(documents);
-                } catch (Exception e) {
-                    log.error("Error adding batch at index {}: {}", batchIndex, e.getMessage(), e);
-                }
-            }));
-        }
-
-        // Wait for all tasks to complete
-        for (Future<?> future : futures) {
             try {
-                future.get(); // block and check for errors
-            } catch (InterruptedException | ExecutionException e) {
-                log.error("Batch processing interrupted or failed: {}", e.getMessage(), e);
+                vectorStore.add(documents);
+            } catch (Exception e) {
+                log.error("Error while adding batch to vector store at batch index {}: {}", i, e.getMessage(), e);
+                // Optionally: break or retry logic
             }
         }
-
-        executor.shutdown();
     }
 }
